@@ -2,15 +2,14 @@ package miniotest
 
 import (
 	"context"
-	"io/ioutil"
 	"net"
 	"os"
+	"time"
 
-	// "github.com/minio/minio-go/pkg/credentials"
+	"github.com/minio/madmin-go/v3"
 	mclient "github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	minio "github.com/minio/minio/cmd"
-	"github.com/minio/minio/pkg/madmin"
 	"github.com/pkg/errors"
 )
 
@@ -34,7 +33,7 @@ func StartEmbedded() (string, func() error, error) {
 		return "", nil, errors.Wrap(err, "while creating madimin")
 	}
 
-	td, err := ioutil.TempDir("", "")
+	td, err := os.MkdirTemp("", "")
 	if err != nil {
 		return "", nil, errors.Wrap(err, "while creating temp dir")
 	}
@@ -46,9 +45,9 @@ func StartEmbedded() (string, func() error, error) {
 		Secure: false,
 	})
 
-	err = mc.MakeBucket(context.Background(), "test", mclient.MakeBucketOptions{})
+	_, err = mc.HealthCheck(10 * time.Second)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "while creating bucket")
+		return "", nil, errors.Wrap(err, "while checking health")
 	}
 
 	return addr, func() error {
